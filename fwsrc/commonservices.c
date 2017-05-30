@@ -22,10 +22,15 @@
 uint8_t printed_ip = 0;
 static uint8_t attached_to_mdns = 0;
 
+// cant use backdoor if define this
+//#define DISABLE_SERVICE_UDP
+
 #ifndef DISABLE_SERVICE_UDP
 static struct espconn *pUdpServer;
 #endif
 
+//Cant use HTTP and 'problem' disappers, but self defeating
+//#define DISABLE_HTTP
 #ifndef DISABLE_HTTP
 static struct espconn *pHTTPServer;
 #endif
@@ -393,8 +398,11 @@ CMD_RET_TYPE cmd_WiFi(char * buffer, int retsize, char * pusrdata, char *buffend
 	parameters++; //Assume "tab" after command.
 	char * apname = ParamCaptureAndAdvance();
 	char * password = ParamCaptureAndAdvance();
-	char * encr = ParamCaptureAndAdvance(); //Encryption
+//TODO  fix hack encr not used and bssid is used a channel number for AP mode
+//      also looks like encr is the mac address not bssid
+//	char * encr = ParamCaptureAndAdvance(); //Encryption
 	char * bssid = ParamCaptureAndAdvance();
+	char * chanstr = ParamCaptureAndAdvance();
 
 	if( apname ) { aplen = ets_strlen( apname ); }
 	if( password ) { passlen = ets_strlen( password ); }
@@ -418,7 +426,8 @@ CMD_RET_TYPE cmd_WiFi(char * buffer, int retsize, char * pusrdata, char *buffend
 				if( aplen > 31 ) aplen = 31;
 				if( passlen > 63 ) passlen = 63;
 
-				printf( "Switching to: \"%s\"/\"%s\" (%d/%d). BSSID_SET: %d [%c]\n", apname, password, aplen, passlen, bssid_set, pusrdata[1] );
+				printf( "W%c \"%s\"/\"%s\" (%d/%d)\n", pusrdata[1], apname, password, aplen, passlen);
+				printf( "   BSSID_SET: %d MAC: %s CHANSTR: %s \n", bssid_set, bssid, chanstr);
 				wifi_station_disconnect();
 
 				if( pusrdata[1] == '1' ) {
@@ -438,11 +447,11 @@ CMD_RET_TYPE cmd_WiFi(char * buffer, int retsize, char * pusrdata, char *buffend
 
 					EnterCritical();
 					//wifi_station_set_config(&stationConf);
-					wifi_set_opmode_current( 1 );
+					//wifi_set_opmode_current( 1 );
 					wifi_set_opmode( 1 );
 					wifi_station_set_config(&stationConf);
 					wifi_station_connect();
-					wifi_station_set_config(&stationConf);  //I don't know why, doing this twice seems to make it store more reliably.
+					//wifi_station_set_config(&stationConf);  //I don't know why, doing this twice seems to make it store more reliably.
 					ExitCritical();
 					printed_ip = 0;
 					//wifi_station_get_config( &stationConf );
@@ -468,7 +477,7 @@ CMD_RET_TYPE cmd_WiFi(char * buffer, int retsize, char * pusrdata, char *buffend
 					}
     				#endif
 
-					int chan = (bssid) ? safe_atoi(bssid) : config.channel;
+					int chan = (chanstr) ? safe_atoi(chanstr) : config.channel;
 					if( chan == 0 || chan > 13 ) chan = 1;
 					config.channel = chan;
 
@@ -523,14 +532,15 @@ CMD_RET_TYPE cmd_WiFi(char * buffer, int retsize, char * pusrdata, char *buffend
 		case 'S': case 's': {
 			int r;   struct scan_config sc;
 
-			sc.ssid = 0;  sc.bssid = 0;  sc.channel = 0;  sc.show_hidden = 1;
+			sc.ssid = NULL;  sc.bssid = NULL;  sc.channel = 0;  sc.show_hidden = 1;
 
 			EnterCritical();
 			if( wifi_get_opmode() == SOFTAP_MODE ) {
 				wifi_set_opmode_current( STATION_MODE );
 				need_to_switch_opmode = 1;
 			}
-			r = wifi_station_scan(&sc, scandone );
+//TODO tried this	wifi_station_disconnect(); // but then hangs
+			r = wifi_station_scan(&sc, &scandone );
 			ExitCritical();
 
 			buffprint( "WS%d\n", r );
@@ -831,6 +841,7 @@ static void ICACHE_FLASH_ATTR GoAP( int always )
 	config.beacon_interval = 100;
 	if( always )
 	{
+//TODO  Shouldnt opmode be set to SOFT before call wifi_softap_set?
 		wifi_softap_set_config(&config);
 		wifi_set_opmode( 2 );
 	}
@@ -921,7 +932,7 @@ static void ICACHE_FLASH_ATTR SlowTick( int opm )
 			CSConnectionChange();
 		}
 	}
-
+//TODO How can need_to_switch_opmode ever be > 2? This is counting down to 3 and setting to station
 	if(	need_to_switch_opmode > 2 ) {
 		if( need_to_switch_opmode == 3 ) {
 			need_to_switch_opmode = 0;
@@ -932,6 +943,7 @@ static void ICACHE_FLASH_ATTR SlowTick( int opm )
 	} else if( need_to_switch_opmode == 2 ) {
 		need_to_switch_opmode = 0;
 		SwitchToSoftAP();
+		GoAP(1);
 	}
 }
 

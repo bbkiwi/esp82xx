@@ -169,15 +169,17 @@ The commands are:
 |        | q       | Probe |
 |        | s       | Service name |
 |        | l       | List IP, service, device name and description |
+TODO br rebooted
 |        | r       | Response |
 |        |         |  |
 | **G**  |         | **GPIO commands** |
-|        | 0       | Turn pin with the same number as the first argument on |
-|        | 1       | Turn pin with the same number as the first argument off |
-|        | i       | Make pin numbered same as the first argument an input |
-|        | f       | Toggle pin number specified by the first argument |
-|        | g       | Get status of pin numbered same as the first argument |
+|        | 0       | G0n Turn pin number n on |
+|        | 1       | G1n Turn pin number n off |
+|        | i       | Gin Make pin number n an input |
+|        | f       | Gfn Toggle pin number n |
+|        | g       | Ggn Get status of pin number n |
 |        | s       | Get outputmask and rmask as base-ten numbers |
+|        |         | G00 Restore and Reboot; Gf2 toggle builtin LED
 |        |         |  |
 | **E**  | .       | **Echo command string with all arguments (for test purposes)** |
 |        |         |  |
@@ -187,8 +189,9 @@ The commands are:
 |        | l       | Load CS-settings 1 |
 |        | r       | Load CS-settings 2 |
 |        | f       | Start finding devices or return list of found devices |
-|        | n       | Device name |
-|        | d       | Device description |
+TODO in rebooted
+|        | n       | inxxx sets Device name to xxx |
+|        | d       | idxxx sets Device description to xxx |
 |        | .       | General info: IP, device name, description, servie name, free heap |
 |        |         |  |
 | **W**  |         | **Wifi commands** |
@@ -198,6 +201,7 @@ The commands are:
 |        | x       | Get RSSI (if applicable) and current IP |
 |        | s       | Scan for WiFi stations |
 |        | r       | Return results of scan |
+TODO ws not seem to work maybe not find station connected to? Doesn't work in AP disconnects but not rejoin AP properly
 |        |         |  |
 | **F**  |         | **Flashing commands** |
 |        | e       | Erase sector |
@@ -205,7 +209,7 @@ The commands are:
 |        | m       | Execute flash rewriter |
 |        | w       | Write given number of bytes to flash (binary) |
 |        | x       | Write given number (second argument) of hexadecimal bytes (third argument) to position in (first argument) in flash |
-|        | r       | Read a number of bytes (second argument) from a sector (first argument) flash |
+|        | r       | Read a number of bytes (second argument) from a position (first argument) flash |
 | **C**  |         | ** Custom commands ** |
 |        | C       | Respond with 'CC' |
 |        | E       | Echo arguments to UART |
