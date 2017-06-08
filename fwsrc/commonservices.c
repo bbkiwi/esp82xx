@@ -149,7 +149,8 @@ static void ICACHE_FLASH_ATTR EmitWhoAmINow( )
 	ets_sprintf( etsend, "BR%s\t%s\t%s", ServiceName, SETTINGS.DeviceName, SETTINGS.DeviceDescription );
 	uint32_to_IP4(BrowseRespond,pUdpServer->proto.udp->remote_ip);
 	pUdpServer->proto.udp->remote_port = BrowseRespondPort;
-	espconn_sent( (struct espconn *)pUdpServer, etsend, ets_strlen( etsend ) );
+// espconn_sent depricated
+	espconn_send( (struct espconn *)pUdpServer, etsend, ets_strlen( etsend ) );
 	BrowseRespond = 0;
 	printf( "Emitting WhoAmI\n" );
 #endif
@@ -163,7 +164,8 @@ static void ICACHE_FLASH_ATTR EmitBrowseNow( )
 	ets_sprintf( etsend, "BQ%s", BrowsingService );
 	uint32_to_IP4( ((uint32_t)0xffffffff), pUdpServer->proto.udp->remote_ip );
 	pUdpServer->proto.udp->remote_port = BACKEND_PORT;
-	espconn_sent( (struct espconn *)pUdpServer, etsend, ets_strlen( etsend ) );
+// espconn_sent depricated
+	espconn_send( (struct espconn *)pUdpServer, etsend, ets_strlen( etsend ) );
 #endif
 }
 
@@ -428,11 +430,12 @@ CMD_RET_TYPE cmd_WiFi(char * buffer, int retsize, char * pusrdata, char *buffend
 
 				printf( "W%c \"%s\"/\"%s\" (%d/%d)\n", pusrdata[1], apname, password, aplen, passlen);
 				printf( "   BSSID_SET: %d MAC: %s CHANSTR: %s \n", bssid_set, bssid, chanstr);
-				wifi_station_disconnect();
+				//bbb wifi_station_disconnect();
 
 				if( pusrdata[1] == '1' ) {
 					struct station_config stationConf;
 					wifi_station_get_config(&stationConf);
+					debug( "%s %s\n", stationConf.ssid,  stationConf.password  );
 
 					os_memcpy(&stationConf.ssid, apname, aplen);
 					os_memcpy(&stationConf.password, password, passlen);
@@ -440,7 +443,7 @@ CMD_RET_TYPE cmd_WiFi(char * buffer, int retsize, char * pusrdata, char *buffend
 					stationConf.ssid[aplen] = 0;
 					stationConf.password[passlen] = 0;
 					stationConf.bssid_set = bssid_set;
-					os_memcpy( stationConf.bssid, mac, 6 );
+					os_memcpy(&stationConf.bssid, mac, 6 );
 
 					printf( "-->'%s'\n" 	   "-->'%s'\n",
 						    stationConf.ssid,  stationConf.password  );
@@ -449,12 +452,13 @@ CMD_RET_TYPE cmd_WiFi(char * buffer, int retsize, char * pusrdata, char *buffend
 					//wifi_station_set_config(&stationConf);
 					//wifi_set_opmode_current( 1 );
 					wifi_set_opmode( 1 );
-					wifi_station_set_config(&stationConf);
+					printf("Station Set Success %d\n", wifi_station_set_config(&stationConf));
 					wifi_station_connect();
 					//wifi_station_set_config(&stationConf);  //I don't know why, doing this twice seems to make it store more reliably.
 					ExitCritical();
 					printed_ip = 0;
-					//wifi_station_get_config( &stationConf );
+					wifi_station_get_config( &stationConf );
+					debug( "%s %s\n", stationConf.ssid,  stationConf.password  );
 					buffprint( "W1\r\n" );
 					printf( "Switching.\n" );
 				} else {
@@ -794,7 +798,7 @@ void ICACHE_FLASH_ATTR CSInit()
 {
 
 #ifndef DISABLE_SERVICE_UDP
-    pUdpServer = (struct espconn *)os_zalloc(sizeof(struct espconn));
+	pUdpServer = (struct espconn *)os_zalloc(sizeof(struct espconn));
 	ets_memset( pUdpServer, 0, sizeof( struct espconn ) );
 	pUdpServer->type = ESPCONN_UDP;
 	pUdpServer->proto.udp = (esp_udp *)os_zalloc(sizeof(esp_udp));
@@ -808,14 +812,15 @@ void ICACHE_FLASH_ATTR CSInit()
 #ifndef DISABLE_HTTP
 	pHTTPServer = (struct espconn *)os_zalloc(sizeof(struct espconn));
 	ets_memset( pHTTPServer, 0, sizeof( struct espconn ) );
-	espconn_create( pHTTPServer );
+//	espconn_create( pHTTPServer );
 	pHTTPServer->type = ESPCONN_TCP;
-    pHTTPServer->state = ESPCONN_NONE;
+	pHTTPServer->state = ESPCONN_NONE;
 	pHTTPServer->proto.tcp = (esp_tcp *)os_zalloc(sizeof(esp_tcp));
 	pHTTPServer->proto.tcp->local_port = WEB_PORT;
-    espconn_regist_connectcb(pHTTPServer, httpserver_connectcb);
-    espconn_accept(pHTTPServer);
-    espconn_regist_time(pHTTPServer, 15, 0); //timeout
+	espconn_regist_connectcb(pHTTPServer, httpserver_connectcb);
+	espconn_accept(pHTTPServer);
+	espconn_regist_time(pHTTPServer, 15, 0); //timeout
+	//espconn_create( pHTTPServer ); // try moving at end no diff, or comment out no diff
 #endif
 
 	//Setup GPIO0 and 2 for input.
@@ -841,15 +846,18 @@ static void ICACHE_FLASH_ATTR GoAP( int always )
 	config.beacon_interval = 100;
 	if( always )
 	{
-//TODO  Shouldnt opmode be set to SOFT before call wifi_softap_set?
-		wifi_softap_set_config(&config);
+//TRYING opmode set to SOFT before call wifi_softap_set?
 		wifi_set_opmode( 2 );
+		wifi_softap_set_config(&config);
 	}
 	else
 	{
-		wifi_softap_set_config_current(&config);
 		wifi_set_opmode_current( 2 );
+		wifi_softap_set_config_current(&config);
 	}
+	wifi_softap_get_config(&config);
+	debug( "always = %d SoftAP mode: \"%s\":\"%s\"\n", always, config.ssid, config.password );
+
 }
 
 static void ICACHE_FLASH_ATTR RestoreAndReboot( )
@@ -860,9 +868,9 @@ static void ICACHE_FLASH_ATTR RestoreAndReboot( )
 	//system_restore(); 	//Don't do this. Seems to permanantly break sector for settings.
 	GoAP(1);
 
-	ets_delay_us(1000000);
+	GPIO0Down = 0; // might not get executed if done after restart?
+	ets_delay_us(1000000); // busy wait in micro seconds so 1 sec here
 	system_restart();
-	GPIO0Down = 0;
 }
 
 static void ICACHE_FLASH_ATTR SlowTick( int opm )
@@ -909,6 +917,8 @@ static void ICACHE_FLASH_ATTR SlowTick( int opm )
 			wifi_station_disconnect();
 			wifi_fail_connects++;
 			printf( "Connection failed with code %d... Retrying, try: %d\n", stat, wifi_fail_connects );
+
+#define MAX_CONNECT_FAILURES_BEFORE_SOFTAP 3
 #ifdef MAX_CONNECT_FAILURES_BEFORE_SOFTAP
 			if( wifi_fail_connects > MAX_CONNECT_FAILURES_BEFORE_SOFTAP )
 			{
@@ -1012,6 +1022,7 @@ void ICACHE_FLASH_ATTR CSSettingsLoad(int force_reinit)
 		printf( "Initialized Name: %s\n", SETTINGS.DeviceName );
 
 		CSSettingsSave();
+//TODO in light of line line 865 should this be done??
 		system_restore();
 	}
 
