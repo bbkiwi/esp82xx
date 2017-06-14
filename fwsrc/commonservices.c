@@ -1005,9 +1005,9 @@ void ICACHE_FLASH_ATTR CSSettingsLoad(int force_reinit)
 	ets_memset( &SETTINGS, 0, sizeof( SETTINGS) );
 	system_param_load( 0x3A, 0, &SETTINGS, sizeof( SETTINGS ) );
 
-//	printf( "About to read\n" );
-//	int res = spi_flash_read( 0x3a*0x1000, (uint32*)&SETTINGS, sizeof( SETTINGS ) );		
-//	printf( "RES: %d\n", res );
+	printf( "\nAbout to read\n" );
+	int res = spi_flash_read( 0x3a*0x1000, (uint32*)&SETTINGS, sizeof( SETTINGS ) );		
+	printf( "RES: %d\n", res );
 	printf( "Loading Settings: %02x / %d / %d / %d\n", SETTINGS.settings_key, force_reinit, SETTINGS.DeviceName[0], SETTINGS.DeviceName[0] );
 	if( SETTINGS.settings_key != 0xAF || force_reinit || SETTINGS.DeviceName[0] == 0x00 || SETTINGS.DeviceName[0] == 0xFF ) {
 		ets_memset( &SETTINGS, 0, sizeof( SETTINGS ) );
@@ -1022,7 +1022,7 @@ void ICACHE_FLASH_ATTR CSSettingsLoad(int force_reinit)
 		printf( "Initialized Name: %s\n", SETTINGS.DeviceName );
 
 		CSSettingsSave();
-//TODO in light of line line 865 should this be done??
+//TODO in light of line line 865 should this be done?? 
 		system_restore();
 	}
 

@@ -55,7 +55,7 @@ void ICACHE_FLASH_ATTR HTTPGotData( )
 //         		printf("http.c line 48 state 1,2,3,4 or 5 causes bug c %c, curhttp->state %d\n", c, curhttp->state);
 //		}
 // maybe timing issue, maybe try
-		printf("%c", c);
+//		printf("%c", c);
 
 		switch( curhttp->state )
 		{
@@ -100,7 +100,7 @@ void ICACHE_FLASH_ATTR HTTPGotData( )
 			if( c == '\n' )
 			{
 				curhttp->state = HTTP_STATE_DATA_XFER;
-printf("line 92 commented out InternalStartHTTP() and bug goes away");
+//printf("line 92 commented out InternalStartHTTP() and bug goes away");
 				InternalStartHTTP( );
 			}
 			else if( c != '\r' )
@@ -214,7 +214,7 @@ void ICACHE_FLASH_ATTR HTTPHandleInternalCallback( )
 	}
 	else if( curhttp->is404 )
 	{
-printf("line 217 is404 is true tried return immediately hen goes in loop and eventually browser says cant connect bug still there");
+//printf("line 217 is404 is true tried return immediately then goes in loop and eventually browser says cant connect bug still there");
 		START_PACK
 		PushString("HTTP/1.1 404 Not Found\r\nConnection: close\r\n\r\nFile not found.");
 		END_TCP_WRITE( curhttp->socket );
@@ -377,11 +377,11 @@ http_recvcb(void *arg, char *pusrdata, unsigned short length)
 	//tick task, I don't know if this is actually a probelem.
 	//I'm adding this back-up-the-register just in case.
 	if( curhttp ) { printf( "Unexpected Race Condition\n" );}
-printf("Got here for 404 url\n");
+//printf("Got here for 404 url\n");
 	curhttp = (struct HTTPConnection * )pespconn->reverse;
 	curdata = (uint8*)pusrdata;
 	curlen = length;
-printf("line 371 when comment out HTTPGotData bug goes away\n");
+//printf("line 371 when comment out HTTPGotData bug goes away\n");
 	HTTPGotData();
 	curhttp = 0 ;
 
