@@ -77,6 +77,7 @@ in your `.bashrc`, `.profile` or whatever is used by your shell. This way, the c
 
 You can also pass the location as an argument to make:
 
+
     make all ESP_ROOT=path/to/sdk
 
 ### Start a new Project
