@@ -334,6 +334,8 @@ void InternalStartHTTP( )
 	}
 
 	i = MFSOpenFile( path, &curhttp->data.filedescriptor );
+// bb
+//	i = -1; // bug goes away, but always gives 404
 	curhttp->bytessofar = 0;
 
 	if( i < 0 )
