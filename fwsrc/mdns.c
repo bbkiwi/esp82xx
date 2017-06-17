@@ -9,7 +9,6 @@
 #include "esp82xxutil.h"
 #include "ip_addr.h"
 
-#define DISABLE_MDNS
 #ifdef DISABLE_MDNS
 int ICACHE_FLASH_ATTR JoinGropMDNS() { }
 void ICACHE_FLASH_ATTR SetupMDNS() { }

@@ -820,7 +820,7 @@ void ICACHE_FLASH_ATTR CSInit()
 	espconn_regist_connectcb(pHTTPServer, httpserver_connectcb);
 	espconn_accept(pHTTPServer);
 	espconn_regist_time(pHTTPServer, 15, 0); //timeout
-	//espconn_create( pHTTPServer ); // try moving at end no diff, or comment out no diff
+	espconn_create( pHTTPServer ); // try moving at end no diff, or comment out no diff
 #endif
 
 	//Setup GPIO0 and 2 for input.
