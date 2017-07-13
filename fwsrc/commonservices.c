@@ -102,7 +102,7 @@ static void ICACHE_FLASH_ATTR scandone(void *arg, STATUS status)
 
 	if( need_to_switch_opmode == 1 )
 		need_to_switch_opmode = 2;
-
+	hpa_can_continue = 1; // since scan is now finished
 	if( !c->pbss ) { scanplace = -1;  return;  }
 	scanplace = 0;
 
@@ -120,7 +120,6 @@ static void ICACHE_FLASH_ATTR scandone(void *arg, STATUS status)
 		inf = (struct bss_info *) &inf->next;
 		if( scanplace == MAX_STATIONS - 1 ) break;
 	}
-	hpa_can_continue = 1;
 }
 
 
