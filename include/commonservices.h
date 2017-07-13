@@ -21,6 +21,7 @@
 
 extern int wifi_fail_connects;
 extern uint8_t printed_ip;
+extern uint8_t hpa_can_continue;
 
 //Returns nr bytes to return.  You must allocate retdata.
 //It MUST be at least 1,300 bytes large and it MUST be 32-bit aligned.

@@ -21,6 +21,11 @@
 
 uint8_t printed_ip = 0;
 static uint8_t attached_to_mdns = 0;
+uint8_t hpa_running = 0;
+//uint8_t hpa_is_paused_for_wifi = 0;
+uint8_t hpa_can_continue = 0;
+
+
 
 #ifndef DISABLE_SERVICE_UDP
 static struct espconn *pUdpServer;
@@ -115,6 +120,7 @@ static void ICACHE_FLASH_ATTR scandone(void *arg, STATUS status)
 		inf = (struct bss_info *) &inf->next;
 		if( scanplace == MAX_STATIONS - 1 ) break;
 	}
+	hpa_can_continue = 1;
 }
 
 
@@ -437,14 +443,15 @@ CMD_RET_TYPE cmd_WiFi(char * buffer, int retsize, char * pusrdata, char *buffend
 						    stationConf.ssid,  stationConf.password  );
 
 					EnterCritical();
+					hpa_running = 0; //some how set this flag so proctask will act
+					hpa_can_continue = 0;
 					//wifi_station_set_config(&stationConf);
 					wifi_set_opmode_current( 1 );
 					wifi_set_opmode( 1 );
 					wifi_station_set_config(&stationConf);
 					wifi_station_connect();
 					wifi_station_set_config(&stationConf);  //I don't know why, doing this twice seems to make it store more reliably.
-					ExitCritical();
-					printed_ip = 0;
+					//ExitCritical(); //Let proctask provide the call to ExitCritical
 					//wifi_station_get_config( &stationConf );
 					buffprint( "W1\r\n" );
 					printf( "Switching.\n" );
@@ -477,9 +484,12 @@ CMD_RET_TYPE cmd_WiFi(char * buffer, int retsize, char * pusrdata, char *buffend
 
 					printed_ip = 0;
 					EnterCritical();
+					hpa_running = 0; //some how set this flag so proctask will act
+					hpa_can_continue = 0;
 					wifi_softap_set_config(&config);
 					wifi_set_opmode( 2 );
-					ExitCritical();
+					hpa_can_continue = 1; //Let proctask provide the call to ExitCritical
+					//ExitCritical();
 					printf( "Switching SoftAP: %d %d.\n", chan, config.authmode );
 
 					buffprint( "W2\r\n" );
@@ -526,12 +536,16 @@ CMD_RET_TYPE cmd_WiFi(char * buffer, int retsize, char * pusrdata, char *buffend
 			sc.ssid = 0;  sc.bssid = 0;  sc.channel = 0;  sc.show_hidden = 1;
 
 			EnterCritical();
+			hpa_running = 0; //some how set this flag so proctask will act
+			hpa_can_continue = 0; 
+			//hpa_is_paused_for_wifi = 1;
 			if( wifi_get_opmode() == SOFTAP_MODE ) {
 				wifi_set_opmode_current( STATION_MODE );
 				need_to_switch_opmode = 1;
 			}
 			r = wifi_station_scan(&sc, scandone );
-			ExitCritical();
+
+			//ExitCritical(); // Let proctask provide call to ExitCritical
 
 			buffprint( "WS%d\n", r );
 			uart0_sendStr(buffer);
@@ -568,14 +582,14 @@ CMD_RET_TYPE cmd_Flash(char * buffer, int retsize, char *pusrdata, unsigned shor
 		//(FE#\n) <- # = sector.
 		case 'e': case 'E': {
 			if( nr < 16 ) { buffprint( "!FE%d\r\n", nr ); break; }
-			EnterCritical();   spi_flash_erase_sector( nr );   ExitCritical();
+			EnterCritical(); hpa_running = 0;  hpa_can_continue = 0;   spi_flash_erase_sector( nr );   hpa_can_continue = 1; // ExitCritical();
 			buffprint( "FE%d\r\n", nr );
 		} break;
 
 		//(FB#\n) <- # = block.
 		case 'b': case 'B': {
 			if( nr < 1 ) { buffprint( "!FB%d\r\n", nr ); break; }
-			EnterCritical();   SPIEraseBlock( nr );   ExitCritical();
+			EnterCritical(); hpa_running = 0;  hpa_can_continue = 0;   SPIEraseBlock( nr );   hpa_can_continue = 1; // ExitCritical();
 			buffprint( "FB%d\r\n", nr );
 		} break;
 
@@ -596,9 +610,9 @@ CMD_RET_TYPE cmd_Flash(char * buffer, int retsize, char *pusrdata, unsigned shor
                 debug( "FW%d\r\n", nr );
 				ets_memcpy( buffer, parameters, datlen );
 
-				EnterCritical();
+				EnterCritical(); hpa_running = 0;  hpa_can_continue = 0;
 				spi_flash_write( nr, (uint32*)buffer, (datlen/4)*4 );
-				ExitCritical();
+				hpa_can_continue = 1; // ExitCritical();
 
                 #ifdef VERIFY_FLASH_WRITE
                 #define VFW_SIZE 128
@@ -643,9 +657,9 @@ CMD_RET_TYPE cmd_Flash(char * buffer, int retsize, char *pusrdata, unsigned shor
 
 				//ets_memcpy( buffer, colon2, datlen );
 
-				EnterCritical();
+				EnterCritical(); hpa_running = 0;  hpa_can_continue = 0;
 				spi_flash_write( nr, (uint32*)buffend, (datlen/4)*4 );
-				ExitCritical();
+				hpa_can_continue = 1; // ExitCritical();
 
                 #ifdef VERIFY_FLASH_WRITE
                 // uint8_t  __attribute__ ((aligned (32))) buf[1300];
@@ -753,10 +767,13 @@ void ICACHE_FLASH_ATTR issue_command_udp(void *arg, char *pusrdata, unsigned sho
 static void ICACHE_FLASH_ATTR SwitchToSoftAP( )
 {
 	EnterCritical();
+	//hpa_running = 0; //some how set this flag so proctask will act
+	//hpa_can_continue = 0;
 	struct softap_config sc;
 	wifi_softap_get_config(&sc);
 	printed_ip = 0;
 	printf( "SoftAP mode: \"%s\":\"%s\" @ %d %d/%d\n", sc.ssid, sc.password, wifi_get_channel(), sc.ssid_len, wifi_softap_dhcps_status() );
+	//hpa_can_continue = 1;
 	ExitCritical();
 }
 
@@ -833,13 +850,13 @@ static void ICACHE_FLASH_ATTR GoAP( int always )
 	config.beacon_interval = 100;
 	if( always )
 	{
-		wifi_softap_set_config(&config);
 		wifi_set_opmode( 2 );
+		wifi_softap_set_config(&config);
 	}
 	else
 	{
-		wifi_softap_set_config_current(&config);
 		wifi_set_opmode_current( 2 );
+		wifi_softap_set_config_current(&config);
 	}
 }
 
@@ -900,6 +917,7 @@ static void ICACHE_FLASH_ATTR SlowTick( int opm )
 			wifi_station_disconnect();
 			wifi_fail_connects++;
 			printf( "Connection failed with code %d... Retrying, try: %d\n", stat, wifi_fail_connects );
+#define MAX_CONNECT_FAILURES_BEFORE_SOFTAP 3
 #ifdef MAX_CONNECT_FAILURES_BEFORE_SOFTAP
 			if( wifi_fail_connects > MAX_CONNECT_FAILURES_BEFORE_SOFTAP )
 			{

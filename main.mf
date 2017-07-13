@@ -22,6 +22,7 @@ usbburn .... Burn via PRE-RELEASE USB loader (will probably change)
 usbweb ..... Burn webpage by PRE-RELEASE USB loader (will probably change)
 initdefault  Burn default initial data to ROM (may be needed after erase)
 init3v3 .... Burn default values to rom but for use with system_get_vdd33
+initalt .... Burn default values to rom setting vcc at 3.3 v
 erase ...... Totally erase chip.
 
 More commands: all, clean, purge, dumprom, cleanproject
@@ -154,6 +155,9 @@ initdefault :
 
 init3v3 :
 	$(ESPTOOL_PY) $(BURNFLAGS) --port $(PORT) write_flash 0x3FC000 esp82xx/data/esp_init_data_adc33.bin
+
+initalt :
+	$(ESPTOOL_PY) $(BURNFLAGS) --port $(PORT) write_flash 0x3FC000 esp82xx/data/esp_init_data_alt.bin
 
 erase:
 	$(ESPTOOL_PY) $(BURNFLAGS) --port $(PORT) erase_flash
