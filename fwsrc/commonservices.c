@@ -544,7 +544,7 @@ CMD_RET_TYPE cmd_WiFi(char * buffer, int retsize, char * pusrdata, char *buffend
 			}
 			r = wifi_station_scan(&sc, scandone );
 
-			//ExitCritical(); // Let proctask provide call to ExitCritical
+			//ExitCritical(); // scandone sets hpa_can_continue=1 so proctask provides call to ExitCritical
 
 			buffprint( "WS%d\n", r );
 			uart0_sendStr(buffer);
@@ -835,10 +835,14 @@ void ICACHE_FLASH_ATTR CSInit()
 
 static int GPIO0Down = 0;
 
+
+
 static void ICACHE_FLASH_ATTR GoAP( int always )
 {
 	struct softap_config config;
+	char macaddr[6];
 	wifi_softap_get_config(&config);
+	wifi_get_macaddr(SOFTAP_IF, macaddr);
 	config.ssid_len = ets_strlen(SETTINGS.DeviceName);
 	os_memcpy( &config.ssid, SETTINGS.DeviceName, config.ssid_len+1 );
 	os_memcpy( &config.password, "", 1 );
@@ -847,22 +851,31 @@ static void ICACHE_FLASH_ATTR GoAP( int always )
 	config.ssid_hidden = 0;
 	config.max_connection = 4;
 	config.beacon_interval = 100;
+	printed_ip = 0;
+	EnterCritical();
+	hpa_running = 0;
+	hpa_can_continue = 0;
 	if( always )
 	{
-		wifi_set_opmode( 2 );
 		wifi_softap_set_config(&config);
+		wifi_set_opmode( 2 );
 	}
 	else
 	{
-		wifi_set_opmode_current( 2 );
 		wifi_softap_set_config_current(&config);
+		wifi_set_opmode_current( 2 );
 	}
+	hpa_can_continue = 1; //Let proctask provide the call to ExitCritical
+	printf( "GoAP(%d) %s.\n", always, SETTINGS.DeviceName );
 }
 
 static void ICACHE_FLASH_ATTR RestoreAndReboot( )
 {
 	printf( "Restoring and rebooting\n" );
-	CSSettingsLoad(1);
+//	EnterCritical();
+//	hpa_running = 0; //some how set this flag so proctask will act
+//	hpa_can_continue = 0;
+	//CSSettingsLoad(1);
 	PIN_DIR_OUTPUT = _BV(2); //Turn GPIO2 light off.
 	//system_restore(); 	//Don't do this. Seems to permanantly break sector for settings.
 	GoAP(1);
@@ -1000,7 +1013,7 @@ void ICACHE_FLASH_ATTR CSConnectionChange()
 void ICACHE_FLASH_ATTR CSSettingsLoad(int force_reinit)
 {
 	ets_memset( &SETTINGS, 0, sizeof( SETTINGS) );
-	system_param_load( 0x3A, 0, &SETTINGS, sizeof( SETTINGS ) );
+	system_param_load( 0x3A, 0, &SETTINGS, sizeof( SETTINGS ) );i
 
 //	printf( "About to read\n" );
 //	int res = spi_flash_read( 0x3a*0x1000, (uint32*)&SETTINGS, sizeof( SETTINGS ) );
@@ -1019,11 +1032,10 @@ void ICACHE_FLASH_ATTR CSSettingsLoad(int force_reinit)
 		printf( "Initialized Name: %s\n", SETTINGS.DeviceName );
 
 		CSSettingsSave();
-		system_restore();
+		//system_restore();
 	}
 
 	wifi_station_set_hostname( SETTINGS.DeviceName );
-
 	printf( "Settings Loaded: %s / %s\n", SETTINGS.DeviceName, SETTINGS.DeviceDescription );
 }
 
