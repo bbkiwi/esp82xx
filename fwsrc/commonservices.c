@@ -772,8 +772,8 @@ static void ICACHE_FLASH_ATTR SwitchToSoftAP( )
 	wifi_softap_get_config(&sc);
 	printed_ip = 0;
 	printf( "SoftAP mode: \"%s\":\"%s\" @ %d %d/%d\n", sc.ssid, sc.password, wifi_get_channel(), sc.ssid_len, wifi_softap_dhcps_status() );
-	//hpa_can_continue = 1;
-	ExitCritical();
+	hpa_can_continue = 1;
+	//ExitCritical();
 }
 
 
@@ -875,7 +875,7 @@ static void ICACHE_FLASH_ATTR RestoreAndReboot( )
 //	EnterCritical();
 //	hpa_running = 0; //some how set this flag so proctask will act
 //	hpa_can_continue = 0;
-	//CSSettingsLoad(1);
+	CSSettingsLoad(1);
 	PIN_DIR_OUTPUT = _BV(2); //Turn GPIO2 light off.
 	//system_restore(); 	//Don't do this. Seems to permanantly break sector for settings.
 	GoAP(1);
@@ -1012,12 +1012,15 @@ void ICACHE_FLASH_ATTR CSConnectionChange()
 
 void ICACHE_FLASH_ATTR CSSettingsLoad(int force_reinit)
 {
+//	EnterCritical();
+//	hpa_running = 0; //some how set this flag so proctask will act
+//	hpa_can_continue = 0;
 	ets_memset( &SETTINGS, 0, sizeof( SETTINGS) );
-	system_param_load( 0x3A, 0, &SETTINGS, sizeof( SETTINGS ) );i
+	system_param_load( 0x3A, 0, &SETTINGS, sizeof( SETTINGS ) );
 
-//	printf( "About to read\n" );
-//	int res = spi_flash_read( 0x3a*0x1000, (uint32*)&SETTINGS, sizeof( SETTINGS ) );
-//	printf( "RES: %d\n", res );
+	printf( "About to read\n" );
+	int res = spi_flash_read( 0x3a*0x1000, (uint32*)&SETTINGS, sizeof( SETTINGS ) );
+	printf( "RES: %d\n", res );
 	printf( "Loading Settings: %02x / %d / %d / %d\n", SETTINGS.settings_key, force_reinit, SETTINGS.DeviceName[0], SETTINGS.DeviceName[0] );
 	if( SETTINGS.settings_key != 0xAF || force_reinit || SETTINGS.DeviceName[0] == 0x00 || SETTINGS.DeviceName[0] == 0xFF ) {
 		ets_memset( &SETTINGS, 0, sizeof( SETTINGS ) );
@@ -1030,24 +1033,31 @@ void ICACHE_FLASH_ATTR CSSettingsLoad(int force_reinit)
 		ets_sprintf( SETTINGS.DeviceName, "ESP_%02X%02X%02X", sysmac[3], sysmac[4], sysmac[5] );
 		ets_sprintf( SETTINGS.DeviceDescription, "Default" );
 		printf( "Initialized Name: %s\n", SETTINGS.DeviceName );
-
 		CSSettingsSave();
-		//system_restore();
+//		EnterCritical();
+//		hpa_running = 0; //some how set this flag so proctask will act
+//		hpa_can_continue = 0;
+		system_restore();
+//		hpa_can_continue = 1;
 	}
 
 	wifi_station_set_hostname( SETTINGS.DeviceName );
 	printf( "Settings Loaded: %s / %s\n", SETTINGS.DeviceName, SETTINGS.DeviceDescription );
+//	hpa_can_continue = 1;
 }
 
 
 void ICACHE_FLASH_ATTR CSSettingsSave()
 {
+//	EnterCritical();
+//	hpa_running = 0; //some how set this flag so proctask will act
+//	hpa_can_continue = 0;
 	SETTINGS.settings_key = 0xAF;
 //	spi_flash_erase_sector( 0x3a );
 //	spi_flash_write( 0x3a*0x1000, (uint32*)&SETTINGS, sizeof( SETTINGS ) );
 	system_param_save_with_protect( 0x3A, &SETTINGS, sizeof( SETTINGS ) );
 	printf( "Saving\n" );
-
+//	hpa_can_continue = 1;
 }
 
 

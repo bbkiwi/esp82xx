@@ -14,8 +14,8 @@ void ICACHE_FLASH_ATTR FindMPFS()
 {
 	uint32 mfs_check[2];
 	EnterCritical();
-	//hpa_running = 0; //some how set this flag so proctask will act
-	//hpa_can_continue = 0;
+//	hpa_running = 0; //some how set this flag so proctask will act
+//	hpa_can_continue = 0;
 	uint32 chip_size_saved = flashchip->chip_size;
 	flashchip->chip_size = 0x01000000;
 
@@ -32,7 +32,7 @@ void ICACHE_FLASH_ATTR FindMPFS()
 done:
 	printf( "MFS Found at: %08x\n", mfs_at );
 	flashchip->chip_size = chip_size_saved;
-	//hpa_can_continue = 1;
+//	hpa_can_continue = 1;
 	ExitCritical();
 }
 
@@ -54,8 +54,8 @@ int8_t ICACHE_FLASH_ATTR MFSOpenFile( const char * fname, struct MFSFileInfo * m
 	}
 
 	EnterCritical();
-	//hpa_running = 0; //some how set this flag so proctask will act
-	//hpa_can_continue = 0;
+//	hpa_running = 0; //some how set this flag so proctask will act
+//	hpa_can_continue = 0;
 	uint32 chip_size_saved = flashchip->chip_size;
 	flashchip->chip_size = 0x01000000;
 	uint32 ptr = mfs_at;
@@ -71,13 +71,13 @@ int8_t ICACHE_FLASH_ATTR MFSOpenFile( const char * fname, struct MFSFileInfo * m
 			mfi->offset = e.start;
 			mfi->filelen = e.len;
 			flashchip->chip_size = chip_size_saved;
-			//hpa_can_continue = 1;
+//			hpa_can_continue = 1;
 			ExitCritical();
 			return 0;
 		}
 	}
 	flashchip->chip_size = chip_size_saved;
-	//hpa_can_continue = 1;
+//	hpa_can_continue = 1;
 	ExitCritical();
 	return -1;
 }
@@ -94,13 +94,13 @@ int32_t ICACHE_FLASH_ATTR MFSReadSector( uint8_t* data, struct MFSFileInfo * mfi
 	if( toread > MFS_SECTOR ) toread = MFS_SECTOR;
 
 	EnterCritical();
-	//hpa_running = 0; //some how set this flag so proctask will act
-	//hpa_can_continue = 0;
+//	hpa_running = 0; //some how set this flag so proctask will act
+//	hpa_can_continue = 0;
 	uint32 chip_size_saved = flashchip->chip_size;
 	flashchip->chip_size = 0x01000000;
 	spi_flash_read( mfs_at+mfi->offset, (uint32*)data, MFS_SECTOR ); //TODO: should we make this toread?  maybe toread rounded up?
 	flashchip->chip_size = chip_size_saved;
-	hpa_can_continue = 1;
+//	hpa_can_continue = 1;
 	ExitCritical();
 
 	mfi->offset += toread;
