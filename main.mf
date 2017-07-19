@@ -5,16 +5,15 @@ all......... Build the binaries
 debug....... Build a .map and .lst file.  Useful for seeing what's going on
              behind the scenes.
 burn ....... Write firmware to chip using a regular serial port
-burnweb .... Write data for the Web-GUI to chip using a regular serial
-             port
-netburn .... Same as 'burn' but transfer firmware over the network rather
-             than the serial port (if supported by the existing firmware
-             on the chip)
-netweb ..... Same as 'burnweb' but transfer data over network if supported
-             by firmware currently on the chip
+burnweb .... Write data for the Web-GUI to chip using a regular serial port
+netburn .... Same as 'burn' but transfer over the network
+                (if supported by the existing firmware on the chip)
+             Example: make netburn uses default IP=192.168.4.1 otherwise
+                      make netburn IP=xxx.xxx.xxx.xxx uses IP your ESP is set to
+netweb ..... Same as 'burnweb' but transfer data over network as netburn
 getips ..... Get a list with IPs of esp82xxs connected to your network
-project .... Make the current working direcotry an esp82xx project
-gitproject . Same as 'make project' but also initialiezes the current folder
+project .... Make the current working directory an esp82xx project
+gitproject . Same as 'make project' but also initializes the current folder
              as git repository and pushes it to GIT_ORIGIN.
              Example:
                  make gitproject GIT_ORIGIN=https://github.com/USER/YREPO.git
