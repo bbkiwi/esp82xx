@@ -116,6 +116,7 @@ netburn : $(FW_FILE1) $(FW_FILE2)
 	web/execute_reflash $(IP) $(FW_FILE1) $(FW_FILE2)
 
 netweb :
+	@cd web && $(MAKE) $(MFLAGS) $(MAKEOVERRIDES) clean page.mpfs  #Always rebuild page.mpfs
 	@cd web && $(MAKE) $(MFLAGS) $(MAKEOVERRIDES) push
 
 
