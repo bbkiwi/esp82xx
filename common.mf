@@ -41,7 +41,7 @@ ifeq ($(strip $(ESP_ROOT)),)
 endif
 
 # Version related stuff
-VCMD = git describe --abbrev=5 --dirty --always --tags 2>/dev/null
+VCMD = git describe --abbrev=5 --dirty --always --tags 2>/dev/null;git branch | grep \* | cut -d ' ' -f2 2>/dev/null
 VSUBMODULECMD = git submodule status --recursive 2>/dev/null
 VERSION := $(shell $(VCMD) || { cd esp82xx 2>/dev/null; $(VCMD) ; } ||  echo "unknown")
 VERSIONESP82XX := $(shell $(VSUBMODULECMD))
