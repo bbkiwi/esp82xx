@@ -44,10 +44,10 @@ endif
 # VCMD = git describe --abbrev=5 --dirty --always --tags 2>/dev/null;git branch | grep \* | cut -d ' ' -f2 2>/dev/null
 VCMD = \
                    git describe --abbrev=5 --dirty --always --tags 2>/dev/null;    \
-                   git branch | grep \* | cut -d ' ' -f2 2>/dev/null
+                   git branch 2>/dev/null | grep \* | cut -d ' ' -f2 
 
-VERSION := $(shell git describe --abbrev=5 --dirty --always --tags 2>/dev/null;    \
-                   git branch 2>/dev/null | grep \* 2>| cut -d ' ' -f2 2>/dev/null;\
+VERSION := $(shell git describe --abbrev=5 --dirty --always --tags 2> /dev/null;   \
+                   git branch 2>/dev/null | grep \* | cut -d ' ' -f2;              \
                    git submodule status --recursive 2>/dev/null                    \
              ||    echo "using esp82xx";                                           \
                    cd ../esp82xx 2>/dev/null;                                      \
