@@ -14,7 +14,8 @@ void ICACHE_FLASH_ATTR FindMPFS()
 	EnterCritical();
 	uint32 chip_size_saved = flashchip->chip_size;
 	flashchip->chip_size = 0x01000000;
-
+//TODO if previous flash had MPFS at MFS_START (i.e. highmem) and new file system was put
+//     at MFS_ALTERNATIVE_START (0x10000), this code will not use it.
 	spi_flash_read( MFS_START, mfs_check, sizeof( mfs_check ) );
 	if( strncmp( "MPFSMPFS", mfs_check, 8 ) == 0 ) { mfs_at = MFS_START; goto done; }
 	
