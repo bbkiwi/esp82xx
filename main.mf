@@ -5,7 +5,8 @@ all......... Build the binaries
 debug....... Build a .map and .lst file.  Useful for seeing what's going on
              behind the scenes.
 burn ....... Write firmware to chip using a regular serial port
-burnweb .... Write data for the Web-GUI to chip using a regular serial port
+burnweb .... Recalculate and write data for the Web-GUI to chip using a regular serial port
+calcweb .... Recalculate data for the Web-GUI making new page.mpfs
 netburn .... Same as 'burn' but transfer over the network
                 (if supported by the existing firmware on the chip)
              Example: make netburn uses default IP=192.168.4.1 otherwise
@@ -103,6 +104,9 @@ burn : $(FW_FILE1) $(FW_FILE2)
 else
 	$(error Error: Unknown chip '$(CHIP)')
 endif
+
+calcweb:
+	@cd web && $(MAKE) $(MFLAGS) $(MAKEOVERRIDES) clean page.mpfs  #Always rebuild page.mpfs
 
 burnweb :
 	@cd web && $(MAKE) $(MFLAGS) $(MAKEOVERRIDES) clean page.mpfs  #Always rebuild page.mpfs
