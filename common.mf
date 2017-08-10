@@ -49,6 +49,7 @@ VERSION := $(shell git describe --abbrev=5 --dirty --always --tags 2> /dev/null;
                    git branch 2>/dev/null | grep \* | cut -d ' ' -f2               \
              ||    echo "using esp82xx";                                           \
                    cd ../esp82xx 2>/dev/null;                                      \
+		   echo "esp82xx commmit ";                                        \
                    $(VCMD);                                                        \
                    git submodule status  2>/dev/null                               \
              ||    echo "unknown")
