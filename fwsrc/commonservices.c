@@ -439,7 +439,16 @@ CMD_RET_TYPE cmd_WiFi(char * buffer, int retsize, char * pusrdata, char *buffend
 					EnterCritical();
 					//wifi_station_set_config(&stationConf);
 					wifi_set_opmode_current( 1 ); // This is probably not needed
-					wifi_set_opmode( 1 );
+					wifi_set_opmode( 1 ); // station mode
+#ifdef STATION_IP
+					// set up static IP for station
+					struct ip_info info;
+					wifi_station_dhcpc_stop();
+					IP4_ADDR(&info.ip, 192, 168, 1, STATION_IP);
+					IP4_ADDR(&info.gw, 192, 168, 1, 1);
+					IP4_ADDR(&info.netmask, 255, 255, 255, 0);
+					wifi_set_ip_info(STATION_IF, &info);
+#endif
 					wifi_station_set_config(&stationConf);
 					wifi_station_connect();
 					// this configuring again may not be needed
@@ -769,12 +778,22 @@ static void ICACHE_FLASH_ATTR SwitchToSoftAP( )
 
 void ICACHE_FLASH_ATTR CSPreInit()
 {
+//TODO fix opmode==3 as is looking at remembered opmode from previous use.
 	int opmode = wifi_get_opmode();
 	printf( "Opmode: %d\n", opmode );
 	if( opmode == 1 ) {
 		struct station_config sc;
 		wifi_station_get_config(&sc);
 		printf( "Station mode: \"%s\":\"%s\" (bssid_set:%d)\n", sc.ssid, sc.password, sc.bssid_set );
+#ifdef STATION_IP
+		// set up static IP for station
+		struct ip_info info;
+		wifi_station_dhcpc_stop();
+		IP4_ADDR(&info.ip, 192, 168, 1, STATION_IP);
+		IP4_ADDR(&info.gw, 192, 168, 1, 1);
+		IP4_ADDR(&info.netmask, 255, 255, 255, 0);
+		wifi_set_ip_info(STATION_IF, &info);
+#endif
 		int constat = wifi_station_connect();
 //Disables null SSIDs.
 //		if( sc.ssid[0] == 0 && !sc.bssid_set )	{ wifi_set_opmode( 2 );	opmode = 2; }
@@ -793,7 +812,7 @@ void ICACHE_FLASH_ATTR CSInit()
 {
 
 #ifndef DISABLE_SERVICE_UDP
-    pUdpServer = (struct espconn *)os_zalloc(sizeof(struct espconn));
+	pUdpServer = (struct espconn *)os_zalloc(sizeof(struct espconn));
 	ets_memset( pUdpServer, 0, sizeof( struct espconn ) );
 	pUdpServer->type = ESPCONN_UDP;
 	pUdpServer->proto.udp = (esp_udp *)os_zalloc(sizeof(esp_udp));
@@ -809,12 +828,12 @@ void ICACHE_FLASH_ATTR CSInit()
 	ets_memset( pHTTPServer, 0, sizeof( struct espconn ) );
 	espconn_create( pHTTPServer );
 	pHTTPServer->type = ESPCONN_TCP;
-    pHTTPServer->state = ESPCONN_NONE;
+	pHTTPServer->state = ESPCONN_NONE;
 	pHTTPServer->proto.tcp = (esp_tcp *)os_zalloc(sizeof(esp_tcp));
 	pHTTPServer->proto.tcp->local_port = WEB_PORT;
-    espconn_regist_connectcb(pHTTPServer, httpserver_connectcb);
-    espconn_accept(pHTTPServer);
-    espconn_regist_time(pHTTPServer, 15, 0); //timeout
+	espconn_regist_connectcb(pHTTPServer, httpserver_connectcb);
+	espconn_accept(pHTTPServer);
+	espconn_regist_time(pHTTPServer, 15, 0); //timeout
 #endif
 
 	//Setup GPIO0 and 2 for input.
@@ -905,7 +924,9 @@ static void ICACHE_FLASH_ATTR SlowTick( int opm )
 		struct station_config wcfg;
 		struct ip_info ipi;
 		int stat = wifi_station_get_connect_status();
-
+//TODO could fix up, number of tries and a list of SSID to try is possible using espressive API
+//     see nonos api ref 3.5.18. wifi_station_ap_number_set etc.
+//     could try stations cached and then go to AP
 		if( stat == STATION_WRONG_PASSWORD || stat == STATION_NO_AP_FOUND || stat == STATION_CONNECT_FAIL ) {
 			wifi_station_disconnect();
 			wifi_fail_connects++;
