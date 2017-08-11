@@ -445,7 +445,11 @@ CMD_RET_TYPE cmd_WiFi(char * buffer, int retsize, char * pusrdata, char *buffend
 					struct ip_info info;
 					wifi_station_dhcpc_stop();
 					IP4_ADDR(&info.ip, 192, 168, 1, STATION_IP);
+#ifdef ROUTER_IP
+					IP4_ADDR(&info.gw, 192, 168, 1, ROUTER_IP);
+#else
 					IP4_ADDR(&info.gw, 192, 168, 1, 1);
+#endif
 					IP4_ADDR(&info.netmask, 255, 255, 255, 0);
 					wifi_set_ip_info(STATION_IF, &info);
 #endif
@@ -790,7 +794,11 @@ void ICACHE_FLASH_ATTR CSPreInit()
 		struct ip_info info;
 		wifi_station_dhcpc_stop();
 		IP4_ADDR(&info.ip, 192, 168, 1, STATION_IP);
+#ifdef ROUTER_IP
+		IP4_ADDR(&info.gw, 192, 168, 1, ROUTER_IP);
+#else
 		IP4_ADDR(&info.gw, 192, 168, 1, 1);
+#endif
 		IP4_ADDR(&info.netmask, 255, 255, 255, 0);
 		wifi_set_ip_info(STATION_IF, &info);
 #endif
