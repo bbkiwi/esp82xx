@@ -464,9 +464,9 @@ void ICACHE_FLASH_ATTR SetupMDNS()
 	espconn_create( pMDNSServer );
 }
 
-int ICACHE_FLASH_ATTR JoinGropMDNS()
+int ICACHE_FLASH_ATTR JoinGropMDNS(int opm)
 {
-	uint32_t ip = GetCurrentIP();
+	uint32_t ip = GetCurrentIP(opm);
 	if( ip )
 	{
 		struct ip_addr grpip;
