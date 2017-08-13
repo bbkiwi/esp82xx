@@ -239,6 +239,7 @@ uint32_t ICACHE_FLASH_ATTR GetCurrentIP(int opm)
 		return 0;
 }
 
+#ifdef STATION_IP
 void ICACHE_FLASH_ATTR SetStationStaticIP()
 {
 		// set up static IP for station
@@ -253,6 +254,7 @@ void ICACHE_FLASH_ATTR SetStationStaticIP()
 		IP4_ADDR(&info.netmask, 255, 255, 255, 0);
 		wifi_set_ip_info(STATION_IF, &info);
 }
+#endif
 
 char * ParamCaptureAndAdvance( )
 {

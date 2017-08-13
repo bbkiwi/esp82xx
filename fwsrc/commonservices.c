@@ -857,6 +857,9 @@ static void ICACHE_FLASH_ATTR GoAP( int always )
 		wifi_softap_set_config_current(&config);
 	}
 	printf( "GoAP sets SoftAP mode: \"%s\":\"%s\" @ %d %d/%d\n", config.ssid, config.password, wifi_get_channel(), config.ssid_len, wifi_softap_dhcps_status() );
+// TODO Is there a better way rather put fix for colorchord in esp82x code?
+//      colorchord, seems when failing to connect to station and then calling GoAP(0) to connect to AP. However the Timer is off so no ADC
+	StartHPATimer(); //Init the high speed  ADC timer.
 	ExitCritical();
 }
 
