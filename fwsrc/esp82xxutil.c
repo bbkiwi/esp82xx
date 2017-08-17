@@ -226,19 +226,35 @@ char * ICACHE_FLASH_ATTR strdupcaselower( const char * src )
 	return ret;
 }
 
-uint32_t ICACHE_FLASH_ATTR GetCurrentIP( )
+uint32_t ICACHE_FLASH_ATTR GetCurrentIP(int opm)
 {
 	struct ip_info sta_ip;
-	wifi_get_ip_info(STATION_IF, &sta_ip);
-	if( sta_ip.ip.addr == 0 )
-	{
+	if( opm == 1 )
+		wifi_get_ip_info(STATION_IF, &sta_ip);
+	else
 		wifi_get_ip_info(SOFTAP_IF, &sta_ip);
-	}
 	if( sta_ip.ip.addr != 0 )
 		return sta_ip.ip.addr;
 	else
 		return 0;
 }
+
+#ifdef STATION_IP
+void ICACHE_FLASH_ATTR SetStationStaticIP()
+{
+		// set up static IP for station
+		struct ip_info info;
+		wifi_station_dhcpc_stop();
+		IP4_ADDR(&info.ip, 192, 168, 1, STATION_IP);
+#ifdef ROUTER_IP
+		IP4_ADDR(&info.gw, 192, 168, 1, ROUTER_IP);
+#else
+		IP4_ADDR(&info.gw, 192, 168, 1, 1);
+#endif
+		IP4_ADDR(&info.netmask, 255, 255, 255, 0);
+		wifi_set_ip_info(STATION_IF, &info);
+}
+#endif
 
 char * ParamCaptureAndAdvance( )
 {

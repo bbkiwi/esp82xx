@@ -441,13 +441,7 @@ CMD_RET_TYPE cmd_WiFi(char * buffer, int retsize, char * pusrdata, char *buffend
 					wifi_set_opmode_current( 1 ); // This is probably not needed
 					wifi_set_opmode( 1 ); // station mode
 #ifdef STATION_IP
-					// set up static IP for station
-					struct ip_info info;
-					wifi_station_dhcpc_stop();
-					IP4_ADDR(&info.ip, 192, 168, 1, STATION_IP);
-					IP4_ADDR(&info.gw, 192, 168, 1, 1);
-					IP4_ADDR(&info.netmask, 255, 255, 255, 0);
-					wifi_set_ip_info(STATION_IF, &info);
+					SetStationStaticIP();
 #endif
 					wifi_station_set_config(&stationConf);
 					wifi_station_connect();
@@ -786,13 +780,7 @@ void ICACHE_FLASH_ATTR CSPreInit()
 		wifi_station_get_config(&sc);
 		printf( "Station mode: \"%s\":\"%s\" (bssid_set:%d)\n", sc.ssid, sc.password, sc.bssid_set );
 #ifdef STATION_IP
-		// set up static IP for station
-		struct ip_info info;
-		wifi_station_dhcpc_stop();
-		IP4_ADDR(&info.ip, 192, 168, 1, STATION_IP);
-		IP4_ADDR(&info.gw, 192, 168, 1, 1);
-		IP4_ADDR(&info.netmask, 255, 255, 255, 0);
-		wifi_set_ip_info(STATION_IF, &info);
+		SetStationStaticIP();
 #endif
 		int constat = wifi_station_connect();
 //Disables null SSIDs.
@@ -869,6 +857,9 @@ static void ICACHE_FLASH_ATTR GoAP( int always )
 		wifi_softap_set_config_current(&config);
 	}
 	printf( "GoAP sets SoftAP mode: \"%s\":\"%s\" @ %d %d/%d\n", config.ssid, config.password, wifi_get_channel(), config.ssid_len, wifi_softap_dhcps_status() );
+// TODO Is there a better way rather put fix for colorchord in esp82x code?
+//      colorchord, seems when failing to connect to station and then calling GoAP(0) to connect to AP. However the Timer is off so no ADC
+	StartHPATimer(); //Init the high speed  ADC timer.
 	ExitCritical();
 }
 
@@ -990,7 +981,7 @@ void CSTick( int slowtick )
 	}
 
 	if( !attached_to_mdns )
-		if( JoinGropMDNS() == 0 ) attached_to_mdns = 1;
+		if( JoinGropMDNS(opm) == 0 ) attached_to_mdns = 1;
 
 	HTTPTick(0);
 

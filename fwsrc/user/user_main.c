@@ -111,4 +111,7 @@ void EnterCritical() { }
 
 void ExitCritical() { }
 
+//There is no code in this project that needs to start ADC timer.
+void StartHPATimer() { }
+
 
