@@ -521,9 +521,9 @@ CMD_RET_TYPE cmd_WiFi(char * buffer, int retsize, char * pusrdata, char *buffend
 		case 'X': case 'x': {
 			int rssi = wifi_station_get_rssi();
 			if( rssi >= 0 )
-				buffprint( "WX-\t%08x", GetCurrentIP() );
+				buffprint( "WX-\t%08x", GetCurrentIP(wifi_get_opmode()) );
 			else
-				buffprint( "WX%d\t%08x", wifi_station_get_rssi(), GetCurrentIP() );
+				buffprint( "WX%d\t%08x", wifi_station_get_rssi(), GetCurrentIP(wifi_get_opmode()) );
 		} break;
 
 		case 'S': case 's': {

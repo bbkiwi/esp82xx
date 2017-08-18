@@ -83,7 +83,7 @@ extern uint8_t paramcount;
 char *  ICACHE_FLASH_ATTR ParamCaptureAndAdvance( ); //Increments intcount if good.
 int32_t ICACHE_FLASH_ATTR ParamCaptureAndAdvanceInt( ); //Do the same, but we're looking for an integer.
 
-uint32_t ICACHE_FLASH_ATTR GetCurrentIP( );
+uint32_t ICACHE_FLASH_ATTR GetCurrentIP(int opm );
 
 #endif
 
