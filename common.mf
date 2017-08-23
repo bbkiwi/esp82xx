@@ -44,13 +44,15 @@ endif
 VCMD = \
                    git describe --abbrev=5 --dirty --always --tags 2>/dev/null;    \
                    git branch 2>/dev/null | grep \* | cut -d ' ' -f2 
-
+# bit of hack below, by starting cd web;cd ..; it will abort if executed from directory that does not have subdirectory web
 DIRTYINFO = \
-	cd web;cd ..;git rev-parse HEAD > web/page/dirtyinfo.txt;   \
-        git status -uno -v -v  >> web/page/dirtyinfo.txt;           \
-        echo "\\nSubmodule esp82xx" >> web/page/dirtyinfo.txt;      \
-	cd esp82xx;git rev-parse HEAD >> ../web/page/dirtyinfo.txt; \
-        git status -uno -v -v  >> ../web/page/dirtyinfo.txt
+	cd web;cd ..;echo "<html><head><title>Colorchord Documentation</title><meta charset="UTF-8"></head><body>\\n<PRE>" > web/page/dirtyinfo.html;\
+        git rev-parse HEAD  >> web/page/dirtyinfo.html;   \
+        git status -uno -v -v  >> web/page/dirtyinfo.html;           \
+        echo "\\nSubmodule esp82xx" >> web/page/dirtyinfo.html;      \
+	cd esp82xx;git rev-parse HEAD >> ../web/page/dirtyinfo.html; \
+        git status -uno -v -v  >> ../web/page/dirtyinfo.html; \
+        echo "</PRE>\\n</body></html>" >> ../web/page/dirtyinfo.html
 
 VERSION := $(shell git describe --abbrev=5 --dirty --always --tags 2> /dev/null;   \
                    git branch 2>/dev/null | grep \* | cut -d ' ' -f2;              \
