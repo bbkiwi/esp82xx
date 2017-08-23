@@ -45,14 +45,23 @@ VCMD = \
                    git describe --abbrev=5 --dirty --always --tags 2>/dev/null;    \
                    git branch 2>/dev/null | grep \* | cut -d ' ' -f2 
 
+DIRTYINFO = \
+	cd web;cd ..;git rev-parse HEAD > web/page/dirtyinfo.txt;   \
+        git status -uno -v -v  >> web/page/dirtyinfo.txt;           \
+        echo "\\nSubmodule esp82xx" >> web/page/dirtyinfo.txt;      \
+	cd esp82xx;git rev-parse HEAD >> ../web/page/dirtyinfo.txt; \
+        git status -uno -v -v  >> ../web/page/dirtyinfo.txt
+
 VERSION := $(shell git describe --abbrev=5 --dirty --always --tags 2> /dev/null;   \
-                   git branch 2>/dev/null | grep \* | cut -d ' ' -f2               \
+                   git branch 2>/dev/null | grep \* | cut -d ' ' -f2;              \
+		   $(DIRTYINFO)                                                    \
              ||    echo "using esp82xx";                                           \
                    cd ../esp82xx 2>/dev/null;                                      \
 		   echo "esp82xx commit ";                                         \
                    $(VCMD);                                                        \
                    git submodule status  2>/dev/null                               \
              ||    echo "unknown")
+
 $(info $(VERSION))
 VERSSTR := "Version: $(VERSION)<br>Build $(shell LANG=en_us_8859_1 date '+%a, %b %e %Y, %R:%S %z') with $(OPTS)"
 PROJECT_NAME := $(notdir $(shell git rev-parse --show-toplevel 2>/dev/null || echo "exp82xx-project"))
