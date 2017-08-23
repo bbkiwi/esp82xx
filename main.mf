@@ -27,7 +27,7 @@ erase ...... Totally erase chip.
 More commands: all, clean, purge, dumprom, cleanproject
 endef
 
-.PHONY : all clean purge netburn burnweb burn $(BIN_TARGET) netweb getips help project gitproject cleanproject
+.PHONY : all clean purge netburn calcweb burnweb burn $(BIN_TARGET) netweb getips help project gitproject cleanproject
 
 
 FW_FILE1 = image.elf-0x00000.bin
