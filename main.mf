@@ -62,7 +62,13 @@ LDFLAGS_CORE = -Wl,--relax -Wl,--gc-sections -nostdlib -L$(XTLIB) \
 
 LINKFLAGS = $(LDFLAGS_CORE) -B$(XTLIB) $(LDFLAGS_POST)
 
-BIN_TARGET = $(PROJECT_NAME)-$(VERSION)-binaries.zip
+#TODO not sure what BIN_TARGET is for - I think make zip of all neccessary files
+# however VERSION is not correct and contains blanks which confuses make
+# below is way to remove blanks, VERSION not give commits for submodules when used here
+empty:=
+space:= $(empty) $(empty)
+BIN_TARGET = $(subst $(space),_,$(strip $(PROJECT_NAME)-$(VERSION)-binaries.zip))
+$(info $$(BIN_TARGET)=$(BIN_TARGET))
 ifneq (,$(findstring -DDEBUG,$(OPTS)))
 $(warning Debug is enabled!)
 FLASH_WRITE_FLAGS += --verify

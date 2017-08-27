@@ -45,7 +45,7 @@ VCMD := \
                    git describe --abbrev=5 --dirty --always --tags 2>/dev/null;    \
                    git branch 2>/dev/null | grep \* | cut -d ' ' -f2 
 
-$(info $(MAKEDIRTYINFO))
+# $(info $(MAKEDIRTYINFO))
 # want DIRTYINFO = blank in recursive calls of MAKE
 # this produces webpage with git info about the dirty files
 ifneq ($(MAKEDIRTYINFO),)
@@ -54,9 +54,8 @@ ifneq ($(MAKEDIRTYINFO),)
        git rev-parse HEAD  >> web/page/dirtyinfo.html 2>/dev/null;    \
        git status -uno -v -v  >> web/page/dirtyinfo.html 2>/dev/null;             \
        echo "\\nSubmodule esp82xx" >> web/page/dirtyinfo.html;      \
-       cd esp82xx;git rev-parse HEAD >> $(APP_DIR)/web/page/dirtyinfo.html;   \
-       git status -uno -v -v  >> $(APP_DIR)/web/page/dirtyinfo.html;  \
-       cd ..; \
+       (cd esp82xx;git rev-parse HEAD;cd ..) >> web/page/dirtyinfo.html;   \
+       (cd esp82xx;git status -uno -v -v;cd ..)  >> web/page/dirtyinfo.html;  \
        echo "</PRE>\\n</body></html>" >> web/page/dirtyinfo.html
 else
       $(shell rm web/page/dirtyinfo.html)
@@ -66,13 +65,13 @@ VERSION := $(shell git describe --abbrev=5 --dirty --always --tags 2> /dev/null;
                    git branch 2>/dev/null | grep \* | cut -d ' ' -f2             \
 		   $(DIRTYINFO)                                                    \
              ||    echo "using esp82xx";                                           \
-                   cd esp82xx 2>/dev/null;                                      \
+                   cd ../esp82xx 2>/dev/null;                                      \
 		   echo "esp82xx commit ";                                         \
                    $(VCMD);                                                        \
                    git submodule status  2>/dev/null                               \
              ||    echo "unknown")
 
-
+$(info $$(VERSION)=$(VERSION))
 VERSSTR := "Version: $(VERSION)<br>Build $(shell LANG=en_us_8859_1 date '+%a, %b %e %Y, %R:%S %z') with $(OPTS)"
 PROJECT_NAME := $(notdir $(shell git rev-parse --show-toplevel 2>/dev/null || echo "exp82xx-project"))
 PROJECT_URL := $(subst .com:,.com/,$(subst .git,,$(subst git@,https://,$(shell git config --get remote.origin.url 2>/dev/null || echo "https://github.com/con-f-use/esp82xx-basic.git"))))
