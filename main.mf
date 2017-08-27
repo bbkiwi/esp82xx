@@ -62,9 +62,7 @@ LDFLAGS_CORE = -Wl,--relax -Wl,--gc-sections -nostdlib -L$(XTLIB) \
 
 LINKFLAGS = $(LDFLAGS_CORE) -B$(XTLIB) $(LDFLAGS_POST)
 
-# BIN_TARGET = "$(PROJECT_NAME)-$(VERSION)-binaries.zip"
-BIN_TARGET = TestBinTarget
-$(info BIN_TARGET $(BIN_TARGET))
+BIN_TARGET = $(PROJECT_NAME)-$(VERSION)-binaries.zip
 ifneq (,$(findstring -DDEBUG,$(OPTS)))
 $(warning Debug is enabled!)
 FLASH_WRITE_FLAGS += --verify
