@@ -62,8 +62,9 @@ LDFLAGS_CORE = -Wl,--relax -Wl,--gc-sections -nostdlib -L$(XTLIB) \
 
 LINKFLAGS = $(LDFLAGS_CORE) -B$(XTLIB) $(LDFLAGS_POST)
 
-BIN_TARGET = $(PROJECT_NAME)-$(VERSION)-binaries.zip
-
+# BIN_TARGET = "$(PROJECT_NAME)-$(VERSION)-binaries.zip"
+BIN_TARGET = TestBinTarget
+$(info BIN_TARGET $(BIN_TARGET))
 ifneq (,$(findstring -DDEBUG,$(OPTS)))
 $(warning Debug is enabled!)
 FLASH_WRITE_FLAGS += --verify
@@ -72,6 +73,9 @@ endif
 ifeq ($(SDK),$(PWD)/esp82xx/toolchain/esp_nonos_sdk)
 SDK_DEP := esp82xx/toolchain/esp_nonos_sdk/Makefile
 endif
+
+REBUILD_PAGE := @cd web && $(MAKE) $(MFLAGS) $(MAKEOVERRIDES) DIRTYINFO= clean page.mpfs  #Always rebuild page.mpfs
+
 
 ##########################################################################RULES
 
@@ -106,22 +110,22 @@ else
 endif
 
 calcweb:
-	@cd web && $(MAKE) $(MFLAGS) $(MAKEOVERRIDES) clean page.mpfs  #Always rebuild page.mpfs
+	$(REBUILD_PAGE)
 
 burnweb :
-	@cd web && $(MAKE) $(MFLAGS) $(MAKEOVERRIDES) clean page.mpfs  #Always rebuild page.mpfs
+	$(REBUILD_PAGE)
 	($(ESPTOOL_PY) $(FWBURNFLAGS)  --port $(PORT) write_flash $(PAGE_OFFSET) web/page.mpfs)||(true)
 #If you have space, MFS should live at 0x100000. It can also live at
 #0x10000. But, then it is limited to 180kB. You might need to do this if
 # you have a 512kB, or 1M ESP variant.
 
 netburn : $(FW_FILE1) $(FW_FILE2)
-	@cd web && $(MAKE) $(MFLAGS) $(MAKEOVERRIDES) execute_reflash
+	@cd web && $(MAKE) $(MFLAGS) $(MAKEOVERRIDES) DIRTYINFO= execute_reflash
 	web/execute_reflash $(IP) $(FW_FILE1) $(FW_FILE2)
 
 netweb :
-	@cd web && $(MAKE) $(MFLAGS) $(MAKEOVERRIDES) clean page.mpfs  #Always rebuild page.mpfs
-	@cd web && $(MAKE) $(MFLAGS) $(MAKEOVERRIDES) push
+	$(REBUILD_PAGE)
+	@cd web && $(MAKE) $(MFLAGS) $(MAKEOVERRIDES) DIRTYINFO= push
 
 
 usbburn : $(FW_FILE1) $(FW_FILE2)
@@ -132,9 +136,9 @@ usbweb : $(FW_FILE1) $(FW_FILE2)
 
 $(BIN_TARGET): $(FW_FILE1) $(FW_FILE2)
 	@cd web \
-	 && $(MAKE) $(MFLAGS) $(MAKEOVERRIDES) page.mpfs \
-	 && $(MAKE) $(MFLAGS) $(MAKEOVERRIDES) execute_reflash \
-	 && $(MAKE) $(MFLAGS) $(MAKEOVERRIDES) pushtodev \
+	 && $(MAKE) $(MFLAGS) $(MAKEOVERRIDES) DIRTYINFO= page.mpfs \
+	 && $(MAKE) $(MFLAGS) $(MAKEOVERRIDES) DIRTYINFO= execute_reflash \
+	 && $(MAKE) $(MFLAGS) $(MAKEOVERRIDES) DIRTYINFO= pushtodev \
 	 && cd ..
 	zip $@ $(FW_FILE1) $(FW_FILE2) web/execute_reflash web/mfsmaker web/pushtodev web/page.mpfs
 
@@ -163,7 +167,7 @@ erase:
 	$(ESPTOOL_PY) $(BURNFLAGS) --port $(PORT) erase_flash
 
 purge : clean
-	@cd web && $(MAKE) $(MFLAGS) $(MAKEOVERRIDES) clean
+	@cd web && $(MAKE) $(MFLAGS) $(MAKEOVERRIDES) DIRTYINFO= clean
 	$(RM) $(FW_FILE1) $(FW_FILE2) $(BIN_TARGET)
 
 bump_submodule :
