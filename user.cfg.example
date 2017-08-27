@@ -12,7 +12,7 @@ PAGE_OFFSET  = 65536     # 1048576
 
 ESP_DEFAULT  = $(HOME)/esp8266/esp-open-sdk
 ESP_GCC_VERS = 4.8.5
-
+MAKEDIRTYINFO = 1    #if want web page dirtyinfo.html made which giving git info else comment out
 #FWBURNFLAGS  = -b 1000000  #uncomment if your programmer supports higher speeds.
 
 OPTS += -DICACHE_FLASH
