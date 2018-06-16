@@ -8,6 +8,7 @@ CC = gcc
 CFLAGS = $(OPTS)
 LDLIBS = -lusb-1.0
 PAGE_SCRIPT = $(foreach s, $(call uniq, $(notdir $(wildcard page/jquery*gz) menuinterface.js $(PAGE_SCRIPTS))), <script language="javascript" type="text/javascript" src="$(s)"></script>)
+PAGE_SCRIPT2 = $(foreach s, $(call uniq, $(notdir $(wildcard page/jquery*gz) menuinterface2.js $(PAGE_SCRIPTS))), <script language="javascript" type="text/javascript" src="$(s)"></script>)
 
 mfsmaker : mfsmaker.c
 pushtodev : pushtodev.c
@@ -23,6 +24,15 @@ page.mpfs : mfsmaker $(wildcard page/*) Makefile
 	$(info bla$ ${\n} blubb)
 	$(foreach p, $(filter PAGE_%,$(.VARIABLES)) $(filter PROJECT_%,$(.VARIABLES)) VERSSTR, \
 		sed -i "s/{{$(p)}}/$$(echo -n '$($(p))' | sed -e 's/[\/&"]/\\&/g')/" tmp/index.html && \
+	) true
+	$(foreach p, $(filter PAGE_%,$(.VARIABLES)) $(filter PROJECT_%,$(.VARIABLES)) VERSSTR, \
+		sed -i "s/{{$(p)}}/$$(echo -n '$($(p))' | sed -e 's/[\/&"]/\\&/g')/" tmp/index2.html && \
+	) true
+	$(foreach p, PAGE_OFFSET, \
+		sed -i "s/{{$(p)}}/$$(echo -n '$($(p))' | sed -e 's/[\/&"]/\\&/g')/" tmp/menuinterface2.js && \
+	) true
+	$(foreach p, PAGE_OFFSET, \
+		sed -i "s/{{$(p)}}/$$(echo -n '$($(p))' | sed -e 's/[\/&"]/\\&/g')/" tmp/menuinterface.js && \
 	) true
 	./mfsmaker tmp page.mpfs
 
